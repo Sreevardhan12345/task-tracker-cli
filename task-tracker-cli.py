@@ -1,7 +1,7 @@
 #TODO: Add error handlers
-#TODO: Add desc functionality
-#TODO: Add manual
-#TODO: Add Help Page
+#DONE: Add desc functionality
+#DONE: Add manual
+#DONE: Add Help Page
 
 import os, json, sys
 from enum import Enum
@@ -59,7 +59,7 @@ class Task():
             return ''.join([
                 self.task_display_text(self),
                 ROW_SEP,
-                f'|{'Created At':^15}|{self.createdAt.isoformat():<82}|\n{ROW_SEP}|{'Last Updated':^15}|{self.updatedAt.isoformat():<82}|\n'
+                f'|{'Created At':^15}|{self.createdAt.strftime("%d/%m/%Y, %H:%M:%S"):<82}|\n{ROW_SEP}|{'Last Updated':^15}|{self.updatedAt.strftime("%d/%m/%Y, %H:%M:%S"):<82}|\n'
             ])
         return f'|{str(self.id):^15}| {self.description.ljust(65)}|{str(self.status.name):^15}|\n'
 
@@ -107,7 +107,7 @@ class TaskManager():
             case Status.INPROGRESS: return {t_id:task for t_id,task in filtered_task_list.items() if task.status == Status.INPROGRESS}
             case Status.FINISHED: return {t_id:task for t_id,task in filtered_task_list.items() if task.status == Status.FINISHED}
             case None: return filtered_task_list
-            case _: return []
+            case _: return dict()
             
     def print_tasks(self, filter:str = None, is_detail=False, task_id :int= None):
         if filter:
@@ -121,8 +121,9 @@ class TaskManager():
             return ROW_SEP+task.task_display_text()
         
         if is_detail is True:
-            task = [task for task in filtered_tasks.values() if task.id == task_id].pop()
-            context = ROW_SEP+task.task_display_text(is_detail=True)
+            task = filtered_tasks.get(task_id, None)
+            if task is not None:    
+                context = ROW_SEP+task.task_display_text(is_detail=True)
         else:
             context = ''.join([wrap_task(task) for t_id,task in filtered_tasks.items()])
         print (ROW_SEP+TABLE_HEADER+context+ROW_SEP)
@@ -173,25 +174,54 @@ class TaskManager():
         else : raise InvalidArgumentException
         #add constraints & error handlers
         
-    def descibe_task(self):
-        ...
+    def descibe_task(self, arguments: list[str]):
+        #cmd synta : task-cli describe <task_id>
+        task_id = arguments.pop(0)
+        taskManager.print_tasks(None,True,int(task_id))
         
         
 if __name__ == "__main__":
+        
+    def _display_help():
+        context = '''
+Command Manual for task-tracker
+
+Usage :
+py task-tracker-cli.py => Display the Feature Manual 
+py task-tracker-cli.py [-h|Help]=> Display the Command Manual 
+
+py task-tracker-cli.py CREATE "<Description>" => Display the Feature Manual 
+py task-tracker-cli.py UPDATE <TASK ID>[-s "<status"> | -d "<description>"]=> Update the task stats 
+py task-tracker-cli.py DESCRIBE <TASK ID>=> Display detailed description for tasks 
+py task-tracker-cli.py LIST [TODO|INPROGRESS|COMPLETED]=> Display all/filtered task list
+
+'''
+        print(context)
+        
+    def _display_manual():
+        context = '''
+task-tracker-cli - a commandi line interface to track your tasks.
+
+Here you can 
+    ->Add new tasks with the <CREATE> command
+    ->Update task status & description using the <UPDATE> command
+    ->Delete a task using the <DELETE> command
+    ->Get details of a task using the <DESCRIBE> command
+
+kindly check manual or type `task-tracker-cli.py [help|-h]` 
+
+'''
+        print(context)
+        
+        
     cmd_line_args = sys.argv[1:]
 
     try:
         cmd_let = cmd_line_args.pop(0)
     except IndexError:
-        print('Invalid Command Kindly Check Manual')
+        _display_manual()
         exit(0)
-        
-    def _display_help():
-        ...
-        
-    def _display_manual():
-        print('Invalid Command kindly check manual')
-        
+    
     taskManager = TaskManager()
     try:
         match(cmd_let.upper()):
@@ -201,53 +231,9 @@ if __name__ == "__main__":
             case 'DELETE': taskManager.delete_task_and_save(cmd_line_args)
             case 'DESCRIBE': taskManager.descibe_task(cmd_line_args)
             case 'HELP': _display_help()
+            case '-H': _display_help()
             case _: raise InvalidArgumentException
     except InvalidArgumentException:
         _display_manual()
     except IndexError:
         ...
-    
-    # def create(args):
-    #     # let arg has only description
-    #     taskCount = len(taskManager.task_list) + 1
-    #     taskManager.task_list.append(Task(taskCount,' '.join(args)))
-    #     taskManager.save_tasks()
-    #     print(f'task  ID: {taskCount} {' '.join(args)} created')
-        
-    # def update(args):...
-    
-    # def delete(args):
-    #     #let args has ID to be deleted
-    #     task_id = int(args[0] if len(args) != 0 else 0)
-    #     taskManager.task_list = [task for task in taskManager.task_list if task.id != task_id]
-    #     taskManager.save_tasks()
-    #     print(f'Task with ID {task_id} deleted')
-        
-    # def describe(args):
-    #     taskManager.print_tasks(task_id=0 if len(args) == 0 else int(args[0]), is_detail=True) 
-        
-    # def process_prompts(prompt : str):
-    #     if prompt == '':
-    #         print ('Empty Command , type "exit" to close CLI')
-    #         return
-    #     [task_cli, *args] = prompt.split(' ')
-    #     cmd_let = '' if len(args) == 0 else args.pop(0)
-    #     if task_cli.lower() == 'task-cli':
-            
-    #         match (cmd_let.upper()):
-    #             case 'CREATE':
-    #                 create(args)
-    #                 taskManager.load_tasks()
-    #             case 'UPDATE': update(args)
-    #             case 'DELETE': delete(args)
-    #             case 'LIST': taskManager.print_tasks(None if len(args) == 0 else args[0])
-    #             case 'DESC': describe(args)
-    #             case _: _display_manual()
-    #     #assume 1st key word is command word
-        
-    # # while True:
-    # #     prompt = input('>>> ')
-    # #     if prompt.lower() == 'exit' :
-    # #         exit(0)
-    # #     else: process_prompts(prompt)
-    # # breakpoint()
