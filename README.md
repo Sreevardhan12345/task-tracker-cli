@@ -20,6 +20,7 @@ py task-tracker-cli.py CREATE `Description` | Create new Task with provided Desc
 py task-tracker-cli.py UPDATE `TASK ID`[-s `status` \| -d `description`]| Update the task stats 
 py task-tracker-cli.py DESCRIBE `TASK ID` | Display detailed description for tasks 
 py task-tracker-cli.py LIST [ TODO \| INPROGRESS \| COMPLETED ]| Display all/filtered task list
+py task-trackre-cli.py DELETE `Task ID` | Delete Task with specfied ID
 
 > note: Commands are case-insensitive
 
