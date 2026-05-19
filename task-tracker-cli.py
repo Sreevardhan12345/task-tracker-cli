@@ -92,14 +92,20 @@ class TaskManager():
                     self.load_tasks()
             
     def save_tasks(self):
-        with open(TASK_FILE_PATH,'w') as task_file:
+        with open(TASK_FILE_PATH+'.tmp','w') as task_file:
             json.dump({int(t_id) : task.to_dict() for t_id,task in self.task_list.items()},task_file, indent=4)
+        os.replace(TASK_FILE_PATH+'.tmp', TASK_FILE_PATH)
 
     def load_tasks(self):
-        with open(TASK_FILE_PATH) as task_file:
-            task_list :dict[str,dict]= json.loads(task_file.read())
-            self.task_list = {int(task):Task.from_dict(attrib) for task, attrib in task_list.items()}
-            
+        try:
+            with open(TASK_FILE_PATH) as task_file:
+                task_list :dict[str,dict]= json.loads(task_file.read())
+                self.task_list = {int(task):Task.from_dict(attrib) for task, attrib in task_list.items()}
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in task file")
+        except Exception as e:
+            print(f"Error loading tasks: {e}")
+
     def filter_tasks(self, filter: Status = None):
         filtered_task_list: dict[int:dict] = self.task_list
         match(filter):
@@ -125,7 +131,7 @@ class TaskManager():
             if task is not None:    
                 context = ROW_SEP+task.task_display_text(is_detail=True)
         else:
-            context = ''.join([wrap_task(task) for t_id,task in filtered_tasks.items()])
+            context = ''.join([wrap_task(task) for task in filtered_tasks.values()])
         print (ROW_SEP+TABLE_HEADER+context+ROW_SEP)
         return
         
@@ -175,14 +181,19 @@ class TaskManager():
         #add constraints & error handlers
         
     def descibe_task(self, arguments: list[str]):
-        #cmd synta : task-cli describe <task_id>
+        #cmd syntax : task-cli describe <task_id>
         task_id = arguments.pop(0)
-        taskManager.print_tasks(None,True,int(task_id))
+
+        if task_id is not None:
+            if taskManager.task_list.get(int(task_id), None) is None:
+                print(f'Task with ID {task_id} not found')
+                return
+            taskManager.print_tasks(None,True,int(task_id))
+        else:
+            raise InvalidArgumentException
         
         
-if __name__ == "__main__":
-        
-    def _display_help():
+def _display_help():
         context = '''
 Command Manual for task-tracker
 
@@ -198,9 +209,9 @@ py task-tracker-cli.py LIST [TODO|INPROGRESS|COMPLETED]=> Display all/filtered t
 '''
         print(context)
         
-    def _display_manual():
+def _display_manual():
         context = '''
-task-tracker-cli - a commandi line interface to track your tasks.
+task-tracker-cli - a command line interface to track your tasks.
 
 Here you can 
     ->Add new tasks with the <CREATE> command
@@ -214,6 +225,7 @@ kindly check manual or type `task-tracker-cli.py [help|-h]`
         print(context)
         
         
+if __name__ == "__main__":
     cmd_line_args = sys.argv[1:]
 
     try:
@@ -234,6 +246,8 @@ kindly check manual or type `task-tracker-cli.py [help|-h]`
             case '-H': _display_help()
             case _: raise InvalidArgumentException
     except InvalidArgumentException:
-        _display_manual()
+        print("\n\nInvalid command or arguments.")
+        _display_help()
     except IndexError:
-        ...
+        print("\n\nMissing arguments for the command.")
+        _display_help()
