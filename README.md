@@ -16,9 +16,9 @@ kindly check [Command manual](#command-manual) or type `task-tracker-cli.py [hel
 |-|-|
 |py task-tracker-cli.py |Display the Description | 
 |py task-tracker-cli.py [-h\|Help] | Display the Command Manual |
-py task-tracker-cli.py CREATE "<Description>" | Display the Feature Manual 
-py task-tracker-cli.py UPDATE <TASK ID>[-s "<status"> \| -d "<description>"]| Update the task stats 
-py task-tracker-cli.py DESCRIBE <TASK ID>| Display detailed description for tasks 
+py task-tracker-cli.py CREATE `Description` | Create new Task with provided Description
+py task-tracker-cli.py UPDATE `TASK ID`[-s `status` \| -d `description`]| Update the task stats 
+py task-tracker-cli.py DESCRIBE `TASK ID` | Display detailed description for tasks 
 py task-tracker-cli.py LIST [ TODO \| INPROGRESS \| COMPLETED ]| Display all/filtered task list
 
 > note: Commands are case-insensitive
