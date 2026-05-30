@@ -167,7 +167,6 @@ class TaskManager():
                     else: raise InvalidArgumentException
                     update.update(statusUpdate, descUpdate)
                     self.task_list[update.id] = update
-                    breakpoint()
                     self.save_tasks()
                     print(f'Task {update.id} updated')
                     
